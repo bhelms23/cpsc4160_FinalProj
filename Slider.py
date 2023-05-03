@@ -1,5 +1,6 @@
 import pygame
 import random
+import time
 
 pygame.init()
 
@@ -7,7 +8,7 @@ pygame.init()
 size = (1000,800)
 boardwidth = 1000
 screen = pygame.display.set_mode(size)
-timer = pygame.time.Clock()
+
 mover = ""
 
 ## function variables
@@ -29,6 +30,13 @@ GREEN = (0,255,0)
 RED = (255,0,0)
 ## Define the main game color
 GameColor = WHITE
+
+##total_time = 60
+## START TIME
+##start_ticks = pygame.time.get_ticks()
+is_home_screen = True
+total_time = 120
+start_time = None
 
 
 ## Creating the home screen
@@ -158,11 +166,14 @@ def draw():
     screen.blit(Quit,(720, 400))
 
 
+
 font = pygame.font.Font('freesansbold.ttf', 35)
 TITLE = pygame.font.Font('freesansbold.ttf',50)
 keydown = True
+
 while not over:
     global rect_level1,rect_level2,rect_level3,solve_rect,new_rect,Quit_rect
+    
 
     if homeScreen:
       screen.fill(BLACK)
@@ -201,6 +212,8 @@ while not over:
                 draw()
                 homeScreen = False
                 gamescreen = True
+                is_home_screen = False
+                start_time = time.time()
 
             if rect_level2.collidepoint(event.pos) and homeScreen:
                 GameColor = BLUE
@@ -210,6 +223,8 @@ while not over:
                 draw()
                 homeScreen = False
                 gamescreen = True
+                is_home_screen = False
+                start_time = time.time()
 
             if rect_level3.collidepoint(event.pos) and homeScreen:
                 GameColor = RED
@@ -219,6 +234,8 @@ while not over:
                 draw()
                 homeScreen = False
                 gamescreen = True
+                is_home_screen = False
+                start_time = time.time()
 
         if event.type == pygame.MOUSEBUTTONDOWN and gamescreen:
             if solve_rect.collidepoint(event.pos) and gamescreen:
@@ -229,20 +246,47 @@ while not over:
                 make_zero()
                 starting_board()
                 draw()
+                is_home_screen = False
+                start_time = time.time()
 
             if Quit_rect.collidepoint(event.pos) and gamescreen:
                 gamescreen = False
                 screen.fill(BLACK)
                 goHome()
                 homeScreen = True
+                is_home_screen = True
+                start_time = time.time()
+                
 
     if mover:
         function(mover)
         draw()
     mover = ""
 
-    pygame.display.update()
+    if not is_home_screen:
+        current_time = time.time()
+        elapsed_time = current_time - start_time
+        remaining_time = max(total_time - elapsed_time, 0)
+        if remaining_time == 0:
+            screen.fill(RED)
+            gameover = font.render("LOSER",False,(0,0,0))
+            enter_button = font.render("CLOSE APP AND TRY AGAIN",False,(0,0,0))
+            screen.blit(gameover,(450-int(gameover.get_width()/2),700/2))
+            screen.blit(enter_button,(450-int(enter_button.get_width()/2),550))
+            gameover = True
+        else:
+            minutes = int(remaining_time // 60)
+            seconds = int(remaining_time % 60)
+            time_text = font.render(f'Time Left: {minutes:02d}:{seconds:02d}', True, WHITE)
+            screen.blit(time_text, (10, 10))
+    else:
+        # This is the home screen
+        goHome()
+    
 
+
+    pygame.display.update()
+     
     ##check for solved board
     if board == solvedBoard:
         gamescreen = False
